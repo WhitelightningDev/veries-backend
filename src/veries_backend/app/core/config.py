@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     bigquery_events_table: str = "verification_session_events"
     bigquery_credentials_path: str | None = None
 
+    # Uploads (server-side)
+    upload_storage_root: str = "var/uploads"
+    max_image_upload_bytes: int = 10 * 1024 * 1024
+    max_video_upload_bytes: int = 200 * 1024 * 1024
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
