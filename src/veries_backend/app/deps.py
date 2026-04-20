@@ -21,6 +21,7 @@ from veries_backend.app.infra.verification_session_events_in_memory import (
 from veries_backend.app.infra.verification_sessions_in_memory import (
     in_memory_verification_sessions_repo,
 )
+from veries_backend.app.services.uploads import UploadsService
 from veries_backend.app.services.verification_assets import VerificationAssetsService
 from veries_backend.app.services.verification_session_events import (
     VerificationSessionEventsService,
@@ -71,3 +72,19 @@ def get_verification_assets_service(
     repo: VerificationAssetsRepo = Depends(get_verification_assets_repo),
 ) -> VerificationAssetsService:
     return VerificationAssetsService(sessions=sessions, repo=repo)
+
+
+def get_uploads_service(
+    sessions: VerificationSessionsService = Depends(get_verification_sessions_service),
+    assets: VerificationAssetsService = Depends(get_verification_assets_service),
+    events: VerificationSessionEventsService = Depends(get_verification_session_events_service),
+) -> UploadsService:
+    settings = get_settings()
+    return UploadsService(
+        sessions=sessions,
+        assets=assets,
+        events=events,
+        storage_root=settings.upload_storage_root,
+        max_image_upload_bytes=settings.max_image_upload_bytes,
+        max_video_upload_bytes=settings.max_video_upload_bytes,
+    )
