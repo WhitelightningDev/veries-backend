@@ -229,7 +229,7 @@ class UploadsService:
                     bytes_written += len(chunk)
                     if bytes_written > max_bytes:
                         raise HTTPException(
-                            status_code=http_status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                            status_code=http_status.HTTP_413_CONTENT_TOO_LARGE,
                             detail="File too large",
                         )
                     f.write(chunk)
