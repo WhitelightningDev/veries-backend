@@ -155,6 +155,11 @@ Set in `.env`:
 - `GCS_BUCKET=<images bucket>`
 - optionally: `GCS_VIDEO_BUCKET=<video bucket>`, `GCS_PROJECT`, `GCS_CREDENTIALS_PATH`
 
+### Cloud Run (recommended: Service Account Identity)
+
+On Cloud Run you typically **do not** use a JSON key file. Leave `GCS_CREDENTIALS_PATH` empty and
+grant the Cloud Run runtime service account permission on your bucket(s) (e.g. `roles/storage.objectAdmin`).
+
 By default, the object name is:
 - images: `GCS_IMAGES_PREFIX/<asset.storage_path>`
 - videos: `GCS_VIDEOS_PREFIX/<asset.storage_path>`

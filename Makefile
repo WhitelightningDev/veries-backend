@@ -1,14 +1,13 @@
 .PHONY: dev test lint format
 
 dev:
-\tuvicorn veries_backend.app.main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn veries_backend.app.main:app --reload --host 0.0.0.0 --port 8000
 
 test:
-\tpytest -q
+	pytest -q
 
 lint:
-\truff check .
+	ruff check .
 
 format:
-\truff format .
-
+	ruff format .

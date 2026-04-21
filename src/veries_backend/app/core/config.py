@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -45,6 +46,26 @@ class Settings(BaseSettings):
     gcs_images_prefix: str = "images"
     gcs_videos_prefix: str = "videos"
     gcs_credentials_path: str | None = None
+
+    @field_validator(
+        "bigquery_project",
+        "bigquery_dataset",
+        "bigquery_credentials_path",
+        "bigquery_location",
+        "gcs_project",
+        "gcs_bucket",
+        "gcs_video_bucket",
+        "gcs_credentials_path",
+        mode="before",
+    )
+    @classmethod
+    def _empty_string_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            s = v.strip()
+            return s or None
+        return v
 
 
 @lru_cache(maxsize=1)
