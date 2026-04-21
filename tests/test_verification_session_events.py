@@ -27,13 +27,14 @@ def test_log_event_returns_201() -> None:
     events_repo = InMemoryVerificationSessionEventsRepo()
     analytics = NoOpAnalyticsSink()
 
-    app.dependency_overrides[get_analytics_sink] = lambda: analytics
-    app.dependency_overrides[get_verification_sessions_service] = lambda: (
-        VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+    sessions = VerificationSessionsService(
+        repo=sessions_repo, analytics=analytics, events_repo=events_repo
     )
+    app.dependency_overrides[get_analytics_sink] = lambda: analytics
+    app.dependency_overrides[get_verification_sessions_service] = lambda: sessions
     app.dependency_overrides[get_verification_session_events_service] = lambda: (
         VerificationSessionEventsService(
-            sessions=VerificationSessionsService(repo=sessions_repo, analytics=analytics),
+            sessions=sessions,
             repo=events_repo,
             analytics=analytics,
         )
@@ -59,13 +60,14 @@ def test_log_event_unknown_session_returns_404() -> None:
     events_repo = InMemoryVerificationSessionEventsRepo()
     analytics = NoOpAnalyticsSink()
 
-    app.dependency_overrides[get_analytics_sink] = lambda: analytics
-    app.dependency_overrides[get_verification_sessions_service] = lambda: (
-        VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+    sessions = VerificationSessionsService(
+        repo=sessions_repo, analytics=analytics, events_repo=events_repo
     )
+    app.dependency_overrides[get_analytics_sink] = lambda: analytics
+    app.dependency_overrides[get_verification_sessions_service] = lambda: sessions
     app.dependency_overrides[get_verification_session_events_service] = lambda: (
         VerificationSessionEventsService(
-            sessions=VerificationSessionsService(repo=sessions_repo, analytics=analytics),
+            sessions=sessions,
             repo=events_repo,
             analytics=analytics,
         )
