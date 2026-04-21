@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     app_name: str = "veries-backend"
     api_prefix: str = "/api"
 
+    # CORS (browser frontend)
+    # Accepts: empty, "*" or comma-separated origins in `CORS_ORIGINS`.
+    cors_origins: list[str] = []
+    cors_allow_credentials: bool = False
+
     # Analytics / BigQuery (optional)
     bigquery_enabled: bool = False
     bigquery_project: str | None = None
@@ -46,6 +51,25 @@ class Settings(BaseSettings):
     gcs_images_prefix: str = "images"
     gcs_videos_prefix: str = "videos"
     gcs_credentials_path: str | None = None
+
+    @field_validator(
+        "cors_origins",
+        mode="before",
+    )
+    @classmethod
+    def _parse_cors_origins(cls, v):
+        if v is None:
+            return []
+        if isinstance(v, str):
+            s = v.strip()
+            if not s:
+                return []
+            if s == "*":
+                return ["*"]
+            return [part.strip() for part in s.split(",") if part.strip()]
+        if isinstance(v, (list, tuple)):
+            return [str(part).strip() for part in v if str(part).strip()]
+        return v
 
     @field_validator(
         "bigquery_project",

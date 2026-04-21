@@ -7,8 +7,10 @@ Senior-style Python backend scaffold (FastAPI + `src/` layout).
 ### 1) Install
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 python -m pip install -U pip
-pip install -e ".[dev]"
+python -m pip install -e ".[dev]"
 ```
 
 ### 2) Configure env
@@ -25,6 +27,9 @@ make dev
 
 Open:
 - `GET http://localhost:8000/api/health`
+
+If your frontend runs in the browser, set `CORS_ORIGINS` in `.env` (comma-separated) e.g.
+`http://localhost:3000,http://localhost:5173`.
 
 ## Implementation notes (assessment-oriented)
 
@@ -74,6 +79,7 @@ Session status changes automatically emit best-effort lifecycle events server-si
 
 Explicit frontend logging via `POST /api/verification-sessions/{id}/events` remains supported
 for richer metadata.
+You can fetch recorded events via `GET /api/verification-sessions/{id}/events`.
 
 ## Tests
 
