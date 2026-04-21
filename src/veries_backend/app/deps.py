@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 
 from fastapi import Depends
@@ -38,9 +39,17 @@ def get_analytics_sink() -> AnalyticsSink:
     if not settings.bigquery_enabled:
         return NoOpAnalyticsSink()
 
-    from veries_backend.app.analytics.bigquery_sink import BigQueryAnalyticsSink
+    try:
+        from veries_backend.app.analytics.bigquery_sink import BigQueryAnalyticsSink
+    except ImportError as exc:
+        # Keep the verification flow working even if optional deps aren't installed.
+        logging.getLogger("veries_backend.analytics.bigquery").warning(
+            "BigQuery disabled (dependency missing): %s", exc
+        )
+        return NoOpAnalyticsSink()
 
-    return BigQueryAnalyticsSink(settings=settings)
+    sink = BigQueryAnalyticsSink(settings=settings)
+    return sink
 
 
 @lru_cache(maxsize=1)

@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     bigquery_sessions_table: str = "verification_sessions"
     bigquery_events_table: str = "verification_session_events"
     bigquery_credentials_path: str | None = None
+    bigquery_location: str | None = None
+    bigquery_validate_on_startup: bool = True
+    bigquery_autocreate_tables: bool = False
+    bigquery_fail_requests: bool = False
+    bigquery_async_writes: bool = True
+    bigquery_async_max_workers: int = 2
+    bigquery_session_write_mode: str = "merge"  # "merge" | "append"
 
     # Uploads (server-side)
     upload_storage_root: str = "var/uploads"

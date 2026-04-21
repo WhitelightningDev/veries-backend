@@ -11,3 +11,6 @@ class NoOpAnalyticsSink(AnalyticsSink):
 
     def append_verification_session_event(self, event: VerificationSessionEvent) -> None:
         return
+
+    def close(self) -> None:
+        return
