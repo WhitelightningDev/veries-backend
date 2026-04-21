@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     max_image_upload_bytes: int = 10 * 1024 * 1024
     max_video_upload_bytes: int = 200 * 1024 * 1024
 
+    # Cloud storage (optional)
+    cloud_storage_enabled: bool = False
+    gcs_project: str | None = None
+    gcs_bucket: str | None = None
+    gcs_video_bucket: str | None = None
+    gcs_images_prefix: str = "images"
+    gcs_videos_prefix: str = "videos"
+    gcs_credentials_path: str | None = None
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
