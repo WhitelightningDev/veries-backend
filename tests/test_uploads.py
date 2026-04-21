@@ -4,8 +4,8 @@ import os
 import tempfile
 
 from fastapi.testclient import TestClient
-from veries_backend.app.analytics.noop import NoOpAnalyticsSink
 
+from veries_backend.app.analytics.noop import NoOpAnalyticsSink
 from veries_backend.app.deps import (
     get_analytics_sink,
     get_uploads_service,
@@ -27,6 +27,7 @@ from veries_backend.app.services.verification_session_events import (
     VerificationSessionEventsService,
 )
 from veries_backend.app.services.verification_sessions import VerificationSessionsService
+from veries_backend.app.storage.local import LocalObjectStorage
 
 
 def test_upload_image_persists_asset_and_writes_file() -> None:
@@ -46,7 +47,11 @@ def test_upload_image_persists_asset_and_writes_file() -> None:
             sessions=sessions,
             assets=assets,
             events=events,
-            storage_root=tmp,
+            storage=LocalObjectStorage(root=tmp),
+            images_bucket="",
+            videos_bucket="",
+            images_prefix="",
+            videos_prefix="",
             max_image_upload_bytes=1024,
             max_video_upload_bytes=4096,
         )
@@ -92,7 +97,11 @@ def test_upload_rejects_wrong_mime_for_video() -> None:
             sessions=sessions,
             assets=assets,
             events=events,
-            storage_root=tmp,
+            storage=LocalObjectStorage(root=tmp),
+            images_bucket="",
+            videos_bucket="",
+            images_prefix="",
+            videos_prefix="",
             max_image_upload_bytes=1024,
             max_video_upload_bytes=4096,
         )
@@ -130,7 +139,11 @@ def test_upload_rejects_large_file() -> None:
             sessions=sessions,
             assets=assets,
             events=events,
-            storage_root=tmp,
+            storage=LocalObjectStorage(root=tmp),
+            images_bucket="",
+            videos_bucket="",
+            images_prefix="",
+            videos_prefix="",
             max_image_upload_bytes=4,
             max_video_upload_bytes=4096,
         )
@@ -168,7 +181,11 @@ def test_upload_unknown_session_returns_404() -> None:
             sessions=sessions,
             assets=assets,
             events=events,
-            storage_root=tmp,
+            storage=LocalObjectStorage(root=tmp),
+            images_bucket="",
+            videos_bucket="",
+            images_prefix="",
+            videos_prefix="",
             max_image_upload_bytes=1024,
             max_video_upload_bytes=4096,
         )

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Final
 from uuid import UUID
 
@@ -15,8 +13,12 @@ from veries_backend.app.domain.verification_sessions.events import VerificationS
 from veries_backend.app.services.verification_assets import VerificationAssetsService
 from veries_backend.app.services.verification_session_events import VerificationSessionEventsService
 from veries_backend.app.services.verification_sessions import VerificationSessionsService
-
-_CHUNK_SIZE: Final[int] = 1024 * 1024
+from veries_backend.app.storage.base import ObjectStorage
+from veries_backend.app.storage.errors import (
+    StorageDependencyMissingError,
+    StorageNotConfiguredError,
+    StorageObjectTooLargeError,
+)
 
 _IMAGE_MIME_TYPES: Final[set[str]] = {
     "image/jpeg",
@@ -51,14 +53,22 @@ class UploadsService:
         sessions: VerificationSessionsService,
         assets: VerificationAssetsService,
         events: VerificationSessionEventsService,
-        storage_root: str,
+        storage: ObjectStorage,
+        images_bucket: str,
+        videos_bucket: str,
+        images_prefix: str,
+        videos_prefix: str,
         max_image_upload_bytes: int,
         max_video_upload_bytes: int,
     ) -> None:
         self._sessions = sessions
         self._assets = assets
         self._events = events
-        self._storage_root = Path(storage_root)
+        self._storage = storage
+        self._images_bucket = images_bucket
+        self._videos_bucket = videos_bucket
+        self._images_prefix = images_prefix.strip("/")
+        self._videos_prefix = videos_prefix.strip("/")
         self._max_image_upload_bytes = max_image_upload_bytes
         self._max_video_upload_bytes = max_video_upload_bytes
 
@@ -102,14 +112,13 @@ class UploadsService:
             },
         )
 
-        dest = self._safe_dest_path(asset.storage_path)
-        dest.parent.mkdir(parents=True, exist_ok=True)
-
-        bytes_written = 0
         try:
-            bytes_written = self._write_stream(
-                file=file,
-                dest=dest,
+            bucket, object_name = self._bucket_and_object_name(asset_type, asset.storage_path)
+            bytes_written = self._storage.put_stream(
+                bucket=bucket,
+                object_name=object_name,
+                content_type=mime_type,
+                stream=file.file,
                 max_bytes=self._max_bytes_for(asset_type),
             )
             self._assets.update(
@@ -136,6 +145,26 @@ class UploadsService:
                 storage_path=asset.storage_path,
                 bytes_written=bytes_written,
             )
+        except StorageObjectTooLargeError as exc:
+            raise HTTPException(
+                status_code=http_status.HTTP_413_CONTENT_TOO_LARGE,
+                detail="File too large",
+            ) from exc
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=http_status.HTTP_400_BAD_REQUEST,
+                detail="Invalid storage path",
+            ) from exc
+        except StorageNotConfiguredError as exc:
+            raise HTTPException(
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Storage is not configured",
+            ) from exc
+        except StorageDependencyMissingError as exc:
+            raise HTTPException(
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(exc),
+            ) from exc
         except HTTPException as exc:
             self._assets.update(
                 asset.id,
@@ -181,6 +210,19 @@ class UploadsService:
             return self._max_video_upload_bytes
         return self._max_image_upload_bytes
 
+    def _bucket_and_object_name(
+        self, asset_type: VerificationAssetType, storage_path: str
+    ) -> tuple[str, str]:
+        if asset_type == VerificationAssetType.BACKGROUND_VIDEO:
+            prefix = self._videos_prefix
+            bucket = self._videos_bucket
+        else:
+            prefix = self._images_prefix
+            bucket = self._images_bucket
+
+        object_name = f"{prefix}/{storage_path}" if prefix else storage_path
+        return bucket, object_name
+
     @staticmethod
     def _validate_mime(asset_type: VerificationAssetType, mime_type: str) -> None:
         if not mime_type:
@@ -206,37 +248,3 @@ class UploadsService:
                 status_code=http_status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail="Invalid image/document content-type",
             )
-
-    def _safe_dest_path(self, storage_path: str) -> Path:
-        root = self._storage_root.resolve()
-        dest = (root / storage_path).resolve()
-        if os.path.commonpath([str(root), str(dest)]) != str(root):
-            raise HTTPException(
-                status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail="Invalid storage path",
-            )
-        return dest
-
-    @staticmethod
-    def _write_stream(*, file: UploadFile, dest: Path, max_bytes: int) -> int:
-        bytes_written = 0
-        try:
-            with dest.open("wb") as f:
-                while True:
-                    chunk = file.file.read(_CHUNK_SIZE)
-                    if not chunk:
-                        break
-                    bytes_written += len(chunk)
-                    if bytes_written > max_bytes:
-                        raise HTTPException(
-                            status_code=http_status.HTTP_413_CONTENT_TOO_LARGE,
-                            detail="File too large",
-                        )
-                    f.write(chunk)
-            return bytes_written
-        except HTTPException:
-            try:
-                dest.unlink(missing_ok=True)
-            except OSError:
-                pass
-            raise

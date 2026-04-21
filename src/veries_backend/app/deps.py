@@ -27,6 +27,9 @@ from veries_backend.app.services.verification_session_events import (
     VerificationSessionEventsService,
 )
 from veries_backend.app.services.verification_sessions import VerificationSessionsService
+from veries_backend.app.storage.base import ObjectStorage
+from veries_backend.app.storage.gcs import GCSObjectStorage
+from veries_backend.app.storage.local import LocalObjectStorage
 
 
 @lru_cache(maxsize=1)
@@ -38,6 +41,17 @@ def get_analytics_sink() -> AnalyticsSink:
     from veries_backend.app.analytics.bigquery_sink import BigQueryAnalyticsSink
 
     return BigQueryAnalyticsSink(settings=settings)
+
+
+@lru_cache(maxsize=1)
+def get_object_storage() -> ObjectStorage:
+    settings = get_settings()
+    if not settings.cloud_storage_enabled:
+        return LocalObjectStorage(root=settings.upload_storage_root)
+
+    return GCSObjectStorage(
+        project=settings.gcs_project, credentials_path=settings.gcs_credentials_path
+    )
 
 
 def get_verification_sessions_repo() -> VerificationSessionsRepo:
@@ -80,11 +94,28 @@ def get_uploads_service(
     events: VerificationSessionEventsService = Depends(get_verification_session_events_service),
 ) -> UploadsService:
     settings = get_settings()
+    storage = get_object_storage()
+
+    if settings.cloud_storage_enabled:
+        images_bucket = settings.gcs_bucket or ""
+        videos_bucket = settings.gcs_video_bucket or settings.gcs_bucket or ""
+        images_prefix = settings.gcs_images_prefix
+        videos_prefix = settings.gcs_videos_prefix
+    else:
+        images_bucket = ""
+        videos_bucket = ""
+        images_prefix = ""
+        videos_prefix = ""
+
     return UploadsService(
         sessions=sessions,
         assets=assets,
         events=events,
-        storage_root=settings.upload_storage_root,
+        storage=storage,
+        images_bucket=images_bucket,
+        videos_bucket=videos_bucket,
+        images_prefix=images_prefix,
+        videos_prefix=videos_prefix,
         max_image_upload_bytes=settings.max_image_upload_bytes,
         max_video_upload_bytes=settings.max_video_upload_bytes,
     )
