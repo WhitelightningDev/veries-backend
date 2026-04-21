@@ -11,6 +11,9 @@ from veries_backend.app.deps import (
     get_verification_sessions_service,
 )
 from veries_backend.app.infra.verification_assets_in_memory import InMemoryVerificationAssetsRepo
+from veries_backend.app.infra.verification_session_events_in_memory import (
+    InMemoryVerificationSessionEventsRepo,
+)
 from veries_backend.app.infra.verification_sessions_in_memory import (
     InMemoryVerificationSessionsRepo,
 )
@@ -23,14 +26,19 @@ def test_create_and_list_assets() -> None:
     app = create_app()
     sessions_repo = InMemoryVerificationSessionsRepo()
     assets_repo = InMemoryVerificationAssetsRepo()
+    events_repo = InMemoryVerificationSessionEventsRepo()
     analytics = NoOpAnalyticsSink()
 
     app.dependency_overrides[get_analytics_sink] = lambda: analytics
     app.dependency_overrides[get_verification_sessions_service] = lambda: (
-        VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+        VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        )
     )
     app.dependency_overrides[get_verification_assets_service] = lambda: VerificationAssetsService(
-        sessions=VerificationSessionsService(repo=sessions_repo, analytics=analytics),
+        sessions=VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        ),
         repo=assets_repo,
     )
 
@@ -66,14 +74,19 @@ def test_asset_patch_uploaded_sets_uploaded_at() -> None:
     app = create_app()
     sessions_repo = InMemoryVerificationSessionsRepo()
     assets_repo = InMemoryVerificationAssetsRepo()
+    events_repo = InMemoryVerificationSessionEventsRepo()
     analytics = NoOpAnalyticsSink()
 
     app.dependency_overrides[get_analytics_sink] = lambda: analytics
     app.dependency_overrides[get_verification_sessions_service] = lambda: (
-        VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+        VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        )
     )
     app.dependency_overrides[get_verification_assets_service] = lambda: VerificationAssetsService(
-        sessions=VerificationSessionsService(repo=sessions_repo, analytics=analytics),
+        sessions=VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        ),
         repo=assets_repo,
     )
 
@@ -97,14 +110,19 @@ def test_asset_uploaded_at_without_uploaded_status_returns_409() -> None:
     app = create_app()
     sessions_repo = InMemoryVerificationSessionsRepo()
     assets_repo = InMemoryVerificationAssetsRepo()
+    events_repo = InMemoryVerificationSessionEventsRepo()
     analytics = NoOpAnalyticsSink()
 
     app.dependency_overrides[get_analytics_sink] = lambda: analytics
     app.dependency_overrides[get_verification_sessions_service] = lambda: (
-        VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+        VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        )
     )
     app.dependency_overrides[get_verification_assets_service] = lambda: VerificationAssetsService(
-        sessions=VerificationSessionsService(repo=sessions_repo, analytics=analytics),
+        sessions=VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        ),
         repo=assets_repo,
     )
 

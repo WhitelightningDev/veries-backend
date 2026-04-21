@@ -77,9 +77,10 @@ def get_verification_assets_repo() -> VerificationAssetsRepo:
 
 def get_verification_sessions_service(
     repo: VerificationSessionsRepo = Depends(get_verification_sessions_repo),
+    events_repo: VerificationSessionEventsRepo = Depends(get_verification_session_events_repo),
     analytics: AnalyticsSink = Depends(get_analytics_sink),
 ) -> VerificationSessionsService:
-    return VerificationSessionsService(repo=repo, analytics=analytics)
+    return VerificationSessionsService(repo=repo, analytics=analytics, events_repo=events_repo)
 
 
 def get_verification_session_events_service(

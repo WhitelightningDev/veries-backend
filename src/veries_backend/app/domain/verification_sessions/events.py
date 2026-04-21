@@ -18,6 +18,7 @@ class VerificationSessionEventType(str, Enum):
     DROP_OFF = "drop_off"
     RESUME = "resume"
     SUBMISSION_CONFIRMED = "submission_confirmed"
+    COMPLETED = "completed"
     UPLOAD_STARTED = "upload_started"
     UPLOAD_COMPLETED = "upload_completed"
     UPLOAD_FAILED = "upload_failed"

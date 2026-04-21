@@ -38,7 +38,9 @@ def test_upload_image_persists_asset_and_writes_file() -> None:
         events_repo = InMemoryVerificationSessionEventsRepo()
         analytics = NoOpAnalyticsSink()
 
-        sessions = VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+        sessions = VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        )
         assets = VerificationAssetsService(sessions=sessions, repo=assets_repo)
         events = VerificationSessionEventsService(
             sessions=sessions, repo=events_repo, analytics=analytics
@@ -88,7 +90,9 @@ def test_upload_rejects_wrong_mime_for_video() -> None:
         events_repo = InMemoryVerificationSessionEventsRepo()
         analytics = NoOpAnalyticsSink()
 
-        sessions = VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+        sessions = VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        )
         assets = VerificationAssetsService(sessions=sessions, repo=assets_repo)
         events = VerificationSessionEventsService(
             sessions=sessions, repo=events_repo, analytics=analytics
@@ -130,7 +134,9 @@ def test_upload_rejects_large_file() -> None:
         events_repo = InMemoryVerificationSessionEventsRepo()
         analytics = NoOpAnalyticsSink()
 
-        sessions = VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+        sessions = VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        )
         assets = VerificationAssetsService(sessions=sessions, repo=assets_repo)
         events = VerificationSessionEventsService(
             sessions=sessions, repo=events_repo, analytics=analytics
@@ -172,7 +178,9 @@ def test_upload_unknown_session_returns_404() -> None:
         events_repo = InMemoryVerificationSessionEventsRepo()
         analytics = NoOpAnalyticsSink()
 
-        sessions = VerificationSessionsService(repo=sessions_repo, analytics=analytics)
+        sessions = VerificationSessionsService(
+            repo=sessions_repo, analytics=analytics, events_repo=events_repo
+        )
         assets = VerificationAssetsService(sessions=sessions, repo=assets_repo)
         events = VerificationSessionEventsService(
             sessions=sessions, repo=events_repo, analytics=analytics
