@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 
 from fastapi.testclient import TestClient
-from veries_backend.app.analytics.noop import NoOpAnalyticsSink
 
+from veries_backend.app.analytics.noop import NoOpAnalyticsSink
 from veries_backend.app.deps import (
     get_analytics_sink,
     get_verification_assets_service,
