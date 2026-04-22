@@ -13,6 +13,9 @@ python -m pip install -U pip
 python -m pip install -e ".[dev]"
 ```
 
+VS Code: select `.venv` as your interpreter (or use the repo default via `.vscode/settings.json`)
+so the FastAPI debug config can import `uvicorn`.
+
 ### 2) Configure env
 
 ```bash
@@ -66,6 +69,15 @@ The upload pipeline persists a `VerificationAsset` record (id_document, selfie_w
 and stores the file in either:
 - Local disk under `UPLOAD_STORAGE_ROOT` (demo/default)
 - Google Cloud Storage when `CLOUD_STORAGE_ENABLED=true`
+
+### Vision hardening (OpenCV)
+
+For `id_document` and `selfie_with_id` uploads, the backend can run lightweight OpenCV checks to:
+- reject non-decodable images (when `VISION_REQUIRE_DECODABLE_IMAGES=true`)
+- optionally reject low-quality/suspicious captures (blur/glare/too-small, face/doc detection) when
+  `VISION_ENFORCE_QUALITY=true`
+
+When enabled, results are included in the `upload_completed` event metadata under `vision`.
 
 Background video can be routed to a separate bucket/prefix via:
 - `GCS_VIDEO_BUCKET`
