@@ -34,6 +34,17 @@ Open:
 If your frontend runs in the browser, set `CORS_ORIGINS` in `.env` (comma-separated) e.g.
 `http://localhost:3000,http://localhost:5173`.
 
+## Deploy (Render)
+
+This repo supports Render deployment via Docker.
+
+- Use the included `render.yaml` blueprint, or create a Render **Web Service** with Environment = **Docker**
+- Render sets `PORT` automatically; the `Dockerfile` runs Uvicorn on `$PORT`
+- Set Render Health Check Path to `/api/health`
+- If you need browser access, set `CORS_ORIGINS` (comma-separated) in Render env vars
+- Upload storage on Render is ephemeral by default; for persistence, either attach a Render disk and set
+  `UPLOAD_STORAGE_ROOT` to an absolute path on that disk, or enable cloud storage
+
 ## Implementation notes (assessment-oriented)
 
 ### Repo abstraction + demo persistence
