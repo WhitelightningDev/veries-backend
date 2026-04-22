@@ -53,6 +53,11 @@ def test_log_event_returns_201() -> None:
     assert body["event_type"] == "camera_opened"
     assert body["metadata"] == {"source": "web"}
 
+    list_response = client.get(f"/api/verification-sessions/{session_id}/events")
+    assert list_response.status_code == 200
+    events = list_response.json()
+    assert any(e["event_type"] == "camera_opened" for e in events)
+
 
 def test_log_event_unknown_session_returns_404() -> None:
     app = create_app()
@@ -79,3 +84,8 @@ def test_log_event_unknown_session_returns_404() -> None:
         json={"event_type": "camera_opened"},
     )
     assert response.status_code == 404
+
+    list_response = client.get(
+        "/api/verification-sessions/00000000-0000-0000-0000-000000000000/events"
+    )
+    assert list_response.status_code == 404

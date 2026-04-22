@@ -50,3 +50,7 @@ class VerificationSessionEventsService:
         event = self._repo.create(event)
         self._analytics.append_verification_session_event(event)
         return event
+
+    def list_for_session(self, *, session_id: UUID) -> list[VerificationSessionEvent]:
+        self._sessions.get(session_id)
+        return self._repo.list_for_session(session_id)
