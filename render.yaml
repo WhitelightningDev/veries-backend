@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: veries-backend
+    runtime: docker
+    autoDeploy: true
+    healthCheckPath: /api/health
+    dockerfilePath: ./Dockerfile
