@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     # Vision (OpenCV) - optional upload hardening
     vision_enabled: bool = True
     vision_require_decodable_images: bool = True
-    vision_enforce_quality: bool = False
+    vision_enforce_quality: bool = True
     vision_min_image_side_px: int = 600
     vision_max_glare_ratio: float = 0.12
     vision_min_blur_variance: float = 60.0

@@ -134,7 +134,11 @@ class AssetVisionService:
             elif face_area_ratio is not None and face_area_ratio < s.min_face_area_ratio:
                 issues.append("face_too_small")
 
-        if asset_type == VerificationAssetType.ID_DOCUMENT:
+        if asset_type in {
+            VerificationAssetType.ID_DOCUMENT,
+            VerificationAssetType.ID_DOCUMENT_FRONT,
+            VerificationAssetType.ID_DOCUMENT_BACK,
+        }:
             doc_area_ratio = _detect_document_area_ratio(gray)
             if doc_area_ratio is not None:
                 metrics["document_area_ratio"] = float(doc_area_ratio)
