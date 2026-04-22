@@ -270,7 +270,11 @@ class UploadsService:
             return
 
         allowed = set(_IMAGE_MIME_TYPES)
-        if asset_type == VerificationAssetType.ID_DOCUMENT:
+        if asset_type in {
+            VerificationAssetType.ID_DOCUMENT,
+            VerificationAssetType.ID_DOCUMENT_FRONT,
+            VerificationAssetType.ID_DOCUMENT_BACK,
+        }:
             allowed |= _ID_DOC_EXTRA_MIME_TYPES
 
         if mime_type not in allowed:
