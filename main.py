@@ -4,6 +4,8 @@ import os
 
 import uvicorn
 
+from veries_backend.app.main import app as app
+
 
 def main() -> None:
     host = os.getenv("HOST", "0.0.0.0")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +17,11 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     app_name: str = "veries-backend"
     api_prefix: str = "/api"
+
+    # CORS (browser frontend)
+    # Accepts: empty, "*" or comma-separated origins in `CORS_ORIGINS`.
+    cors_origins: list[str] = []
+    cors_allow_credentials: bool = False
 
     # Analytics / BigQuery (optional)
     bigquery_enabled: bool = False
@@ -45,6 +51,45 @@ class Settings(BaseSettings):
     gcs_images_prefix: str = "images"
     gcs_videos_prefix: str = "videos"
     gcs_credentials_path: str | None = None
+
+    @field_validator(
+        "cors_origins",
+        mode="before",
+    )
+    @classmethod
+    def _parse_cors_origins(cls, v):
+        if v is None:
+            return []
+        if isinstance(v, str):
+            s = v.strip()
+            if not s:
+                return []
+            if s == "*":
+                return ["*"]
+            return [part.strip() for part in s.split(",") if part.strip()]
+        if isinstance(v, (list, tuple)):
+            return [str(part).strip() for part in v if str(part).strip()]
+        return v
+
+    @field_validator(
+        "bigquery_project",
+        "bigquery_dataset",
+        "bigquery_credentials_path",
+        "bigquery_location",
+        "gcs_project",
+        "gcs_bucket",
+        "gcs_video_bucket",
+        "gcs_credentials_path",
+        mode="before",
+    )
+    @classmethod
+    def _empty_string_to_none(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            s = v.strip()
+            return s or None
+        return v
 
 
 @lru_cache(maxsize=1)

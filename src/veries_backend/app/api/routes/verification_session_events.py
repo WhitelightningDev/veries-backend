@@ -16,6 +16,18 @@ from veries_backend.app.services.verification_session_events import (
 router = APIRouter(prefix="/verification-sessions")
 
 
+@router.get(
+    "/{session_id}/events",
+    response_model=list[VerificationSessionEventOut],
+)
+def list_verification_session_events(
+    session_id: UUID,
+    service: VerificationSessionEventsService = Depends(get_verification_session_events_service),
+) -> list[VerificationSessionEventOut]:
+    events = service.list_for_session(session_id=session_id)
+    return [VerificationSessionEventOut.from_domain(event) for event in events]
+
+
 @router.post(
     "/{session_id}/events",
     response_model=VerificationSessionEventOut,
