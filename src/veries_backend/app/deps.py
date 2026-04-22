@@ -22,6 +22,7 @@ from veries_backend.app.infra.verification_session_events_in_memory import (
 from veries_backend.app.infra.verification_sessions_in_memory import (
     in_memory_verification_sessions_repo,
 )
+from veries_backend.app.services.asset_vision import AssetVisionService, VisionSettings
 from veries_backend.app.services.uploads import UploadsService
 from veries_backend.app.services.verification_assets import VerificationAssetsService
 from veries_backend.app.services.verification_session_events import (
@@ -98,10 +99,31 @@ def get_verification_assets_service(
     return VerificationAssetsService(sessions=sessions, repo=repo)
 
 
+@lru_cache(maxsize=1)
+def get_asset_vision_service() -> AssetVisionService:
+    settings = get_settings()
+    return AssetVisionService(
+        settings=VisionSettings(
+            enabled=settings.vision_enabled,
+            require_decodable_images=settings.vision_require_decodable_images,
+            enforce_quality=settings.vision_enforce_quality,
+            min_image_side_px=settings.vision_min_image_side_px,
+            max_glare_ratio=settings.vision_max_glare_ratio,
+            min_blur_variance=settings.vision_min_blur_variance,
+            min_brightness=settings.vision_min_brightness,
+            max_brightness=settings.vision_max_brightness,
+            max_faces=settings.vision_max_faces,
+            min_face_area_ratio=settings.vision_min_face_area_ratio,
+            min_document_area_ratio=settings.vision_min_document_area_ratio,
+        )
+    )
+
+
 def get_uploads_service(
     sessions: VerificationSessionsService = Depends(get_verification_sessions_service),
     assets: VerificationAssetsService = Depends(get_verification_assets_service),
     events: VerificationSessionEventsService = Depends(get_verification_session_events_service),
+    vision: AssetVisionService = Depends(get_asset_vision_service),
 ) -> UploadsService:
     settings = get_settings()
     storage = get_object_storage()
@@ -121,6 +143,7 @@ def get_uploads_service(
         sessions=sessions,
         assets=assets,
         events=events,
+        vision=vision,
         storage=storage,
         images_bucket=images_bucket,
         videos_bucket=videos_bucket,
