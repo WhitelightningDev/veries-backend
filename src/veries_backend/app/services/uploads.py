@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from io import BytesIO
 from typing import Final
 from uuid import UUID
 
@@ -10,6 +11,7 @@ from fastapi import status as http_status
 from veries_backend.app.domain.verification_assets.status import VerificationAssetStatus
 from veries_backend.app.domain.verification_assets.types import VerificationAssetType
 from veries_backend.app.domain.verification_sessions.events import VerificationSessionEventType
+from veries_backend.app.services.asset_vision import AssetVisionService
 from veries_backend.app.services.verification_assets import VerificationAssetsService
 from veries_backend.app.services.verification_session_events import VerificationSessionEventsService
 from veries_backend.app.services.verification_sessions import VerificationSessionsService
@@ -53,6 +55,7 @@ class UploadsService:
         sessions: VerificationSessionsService,
         assets: VerificationAssetsService,
         events: VerificationSessionEventsService,
+        vision: AssetVisionService | None = None,
         storage: ObjectStorage,
         images_bucket: str,
         videos_bucket: str,
@@ -64,6 +67,7 @@ class UploadsService:
         self._sessions = sessions
         self._assets = assets
         self._events = events
+        self._vision = vision
         self._storage = storage
         self._images_bucket = images_bucket
         self._videos_bucket = videos_bucket
@@ -84,6 +88,9 @@ class UploadsService:
 
         mime_type = (file.content_type or "").lower().strip()
         self._validate_mime(asset_type, mime_type)
+
+        vision_result: dict | None = None
+        upload_stream = file.file
 
         asset = self._assets.create(
             session_id=session_id,
@@ -113,12 +120,34 @@ class UploadsService:
         )
 
         try:
+            if (
+                self._vision is not None
+                and self._vision.enabled
+                and asset_type != VerificationAssetType.BACKGROUND_VIDEO
+                and mime_type in _IMAGE_MIME_TYPES
+            ):
+                data = _read_limited(file.file, self._max_bytes_for(asset_type))
+                vision_result = self._vision.analyze_upload(
+                    asset_type=asset_type,
+                    mime_type=mime_type,
+                    data=data,
+                )
+                if vision_result.get("should_reject"):
+                    raise HTTPException(
+                        status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail={
+                            "message": "Upload rejected by vision checks",
+                            "vision": vision_result,
+                        },
+                    )
+                upload_stream = BytesIO(data)
+
             bucket, object_name = self._bucket_and_object_name(asset_type, asset.storage_path)
             bytes_written = self._storage.put_stream(
                 bucket=bucket,
                 object_name=object_name,
                 content_type=mime_type,
-                stream=file.file,
+                stream=upload_stream,
                 max_bytes=self._max_bytes_for(asset_type),
             )
             self._assets.update(
@@ -138,6 +167,7 @@ class UploadsService:
                     "bytes": bytes_written,
                     "storage_path": asset.storage_path,
                     "mime_type": mime_type,
+                    **({"vision": vision_result} if vision_result is not None else {}),
                 },
             )
             return UploadResult(
@@ -248,3 +278,10 @@ class UploadsService:
                 status_code=http_status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail="Invalid image/document content-type",
             )
+
+
+def _read_limited(stream, max_bytes: int) -> bytes:
+    data = stream.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise StorageObjectTooLargeError()
+    return data

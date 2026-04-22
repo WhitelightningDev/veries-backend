@@ -43,6 +43,19 @@ class Settings(BaseSettings):
     max_image_upload_bytes: int = 10 * 1024 * 1024
     max_video_upload_bytes: int = 200 * 1024 * 1024
 
+    # Vision (OpenCV) - optional upload hardening
+    vision_enabled: bool = True
+    vision_require_decodable_images: bool = True
+    vision_enforce_quality: bool = False
+    vision_min_image_side_px: int = 600
+    vision_max_glare_ratio: float = 0.12
+    vision_min_blur_variance: float = 60.0
+    vision_min_brightness: float = 40.0
+    vision_max_brightness: float = 220.0
+    vision_max_faces: int = 1
+    vision_min_face_area_ratio: float = 0.02
+    vision_min_document_area_ratio: float = 0.25
+
     # Cloud storage (optional)
     cloud_storage_enabled: bool = False
     gcs_project: str | None = None
