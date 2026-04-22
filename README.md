@@ -13,6 +13,9 @@ python -m pip install -U pip
 python -m pip install -e ".[dev]"
 ```
 
+VS Code: select `.venv` as your interpreter (or use the repo default via `.vscode/settings.json`)
+so the FastAPI debug config can import `uvicorn`.
+
 ### 2) Configure env
 
 ```bash
